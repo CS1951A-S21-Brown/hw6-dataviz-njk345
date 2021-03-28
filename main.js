@@ -44,7 +44,7 @@ let y_axis_label = svg.append("g");
 svg.append("text")
     .attr("transform", `translate(${graph_1_width / 2 - margin.left}, ${graph_1_height - margin.bottom})`)       // HINT: Place this at the bottom middle edge of the graph
     .style("text-anchor", "middle")
-    .text("Video Game Title");
+    .text("Global Sales (Millions of Units)");
 // Since this text will not update, we can declare it outside of the setData function
 
 
@@ -76,6 +76,62 @@ let svg2 = d3.select("#graph2")
   .attr("height", graph_2_height)
   .append("g")
   .attr("transform", `translate(${graph_2_width / 2}, ${graph_2_height / 2})`);
+
+
+/*********************** PUBLISHER BAR GRAPH ***************************/
+//TODO: Set up SVG object with width, height and margin
+// let svg3 = d3.select("#graph3")
+//     .append("svg")
+//     .attr("width", graph_3_width)     // HINT: width
+//     .attr("height", graph_3_height)     // HINT: height
+//     .append("g")
+//     .attr("transform", `translate(${margin.left}, ${margin.top})`);    // HINT: transform
+//
+// // TODO: Create a linear scale for the x axis (number of occurrences)
+// let x = d3.scaleLinear()
+//     .range([0, graph_3_width - margin.left - margin.right]);
+//
+// // TODO: Create a scale band for the y axis (artist)
+// let y = d3.scaleBand()
+//     .range([0, graph_3_height - margin.top - margin.bottom])
+//     .padding(0.1);  // Improves readability
+// /*
+//     Here we will create global references to the x and y axis with a fixed range.
+//     We will update the domain of the axis in the setData function based on which data source
+//     is requested.
+//  */
+//
+// // Set up reference to count SVG group
+// let countRef = svg3.append("g");
+// // Set up reference to y axis label to update text in setData
+// let y_axis_label = svg3.append("g");
+//
+// // TODO: Add x-axis label
+// svg3.append("text")
+//     .attr("transform", `translate(${graph_3_width / 2 - margin.left}, ${graph_3_height - margin.bottom})`)       // HINT: Place this at the bottom middle edge of the graph
+//     .style("text-anchor", "middle")
+//     .text("Global Sales (Millions of Units)");
+// // Since this text will not update, we can declare it outside of the setData function
+//
+//
+// // TODO: Add y-axis label
+// // ${graph_1_height / 2 + margin.top}, ${-margin.left}
+// //var rotateTranslate = d3.svg.transform().rotate(-90).translate(200, 100);
+// let y_axis_text = svg.append("text")
+//     .attr("transform", `rotate(-90)`) // HINT: Place this at the center left edge of the graph
+//     .attr("x", -90)
+//     .attr("y", -margin.left + 20)
+//     .style("text-anchor", "middle");
+//
+// // TODO: Add chart title
+// let title = svg.append("text")
+//     .attr("transform", `translate(${graph_1_width / 2 - margin.left}, ${-10})`)       // HINT: Place this at the top middle edge of the graph
+//     .style("text-anchor", "middle")
+//     .style("font-size", 15);
+/*
+    We declare global references to the y-axis label and the chart title to update the text when
+    the data source is changed.
+ */
 
 
 /**
@@ -157,7 +213,7 @@ function setVideoGameBarData(isAllTime, year) {
             .style("text-anchor", "start")
             .text(function(d) {return parseFloat(d["Global_Sales"])});           // HINT: Get the count of the artist
 
-        y_axis_text.text("Global Sales (Millions of Units)");
+        y_axis_text.text("Video Game Title");
         if (isAllTime) {
           title.text("Top Video Games of All Time");
         } else {
@@ -185,14 +241,12 @@ function setVideoGamePieData(region) {
     }
     console.log(genreSales);
 
-    // Compute the position of each group on the pie:
     let pie = d3.pie()
       .value(function(d) {return d.value; })
-      .sort(function(a, b) {return d3.ascending(a.key, b.key);}) // This make sure that group order remains the same in the pie chart
+      .sort(function(a, b) {return d3.ascending(a.key, b.key);})
     let pie_data = pie(d3.entries(genreSales))
     console.log(pie_data);
 
-    // map to data
     let pie_graph = svg2.selectAll("path").data(pie_data)
 
     let color = d3.scaleOrdinal()
@@ -228,9 +282,99 @@ function setVideoGamePieData(region) {
     console.log(pie_graph);
 
 
-    // remove the group that is not present anymore
     pie_graph.exit()
              .remove()
+  });
+}
+
+function setPublisherBarData() {
+  // TODO: Load the artists CSV file into D3 by using the d3.csv() method. Index into the filenames array
+  d3.csv(filename).then(function(data) {
+      // TODO: Clean and strip desired amount of data for barplot
+      /* Unfinished */
+
+
+      data = loadVideoGameData(data, function(a, b) {
+        return parseFloat(b["Global_Sales"]) - parseFloat(a["Global_Sales"]);
+      });
+      if(isAllTime) {
+        data = data.slice(0, NUM_VIDEO_GAMES);
+      } else {
+        data = data.filter(d => parseInt(d["Year"]) == year);
+        data = data.slice(0, NUM_VIDEO_GAMES);
+        console.log(data.length);
+      }
+
+      // TODO: Update the x axis domain with the max count of the provided data
+      x.domain([0, d3.max(data, function(d) {return parseFloat(d["Global_Sales"])})]);
+
+      // TODO: Update the y axis domains with the desired attribute
+      y.domain(data.map(function(d) {return d["Name"] + " (" + d["Platform"] + ")"}));
+      // HINT: Use the attr parameter to get the desired attribute for each data point
+
+      // TODO: Render y-axis label
+      y_axis_label.call(d3.axisLeft(y).tickSize(0).tickPadding(10));
+
+      let color = d3.scaleOrdinal()
+      .domain(data.map(function(d) { return d["Name"] + " (" + d["Platform"] + ")" }))
+      .range(d3.quantize(d3.interpolateHcl("#66a0e2", "#81c2c3"), NUM_VIDEO_GAMES));
+
+      /*
+          This next line does the following:
+              1. Select all desired elements in the DOM
+              2. Count and parse the data values
+              3. Create new, data-bound elements for each data value
+       */
+      let bars = svg.selectAll("rect").data(data);
+
+      // TODO: Render the bar elements on the DOM
+      /*
+          This next section of code does the following:
+              1. Take each selection and append a desired element in the DOM
+              2. Merge bars with previously rendered elements
+              3. For each data point, apply styling attributes to each element
+
+          Remember to use the attr parameter to get the desired attribute for each data point
+          when rendering.
+       */
+      bars.enter()
+          .append("rect")
+          .merge(bars)
+          .transition()
+          .duration(1000)
+          .attr("fill", function(d) {return color(d["Name"] + " (" + d["Platform"] + ")")})
+          .attr("x", x(0))
+          .attr("y", function(d) {return y(d["Name"] + " (" + d["Platform"] + ")")})               // HINT: Use function(d) { return ...; } to apply styles based on the data point
+          .attr("width", function(d) {return x(parseFloat(d["Global_Sales"]))})
+          .attr("height", y.bandwidth());        // HINT: y.bandwidth() makes a reasonable display height
+
+      /*
+          In lieu of x-axis labels, we are going to display the count of the artist next to its bar on the
+          bar plot. We will be creating these in the same manner as the bars.
+       */
+      let counts = countRef.selectAll("text").data(data);
+
+      // TODO: Render the text elements on the DOM
+      counts.enter()
+          .append("text")
+          .merge(counts)
+          .transition()
+          .duration(1000)
+          .attr("x", function(d) {return x(parseFloat(d["Global_Sales"])) + 10})       // HINT: Add a small offset to the right edge of the bar, found by x(d.count)
+          .attr("y", function(d) {return y(d["Name"] + " (" + d["Platform"] + ")") + 10})       // HINT: Add a small offset to the top edge of the bar, found by y(d.artist)
+          .style("text-anchor", "start")
+          .text(function(d) {return parseFloat(d["Global_Sales"])});           // HINT: Get the count of the artist
+
+      y_axis_text.text("Video Game Title");
+      if (isAllTime) {
+        title.text("Top Video Games of All Time");
+      } else {
+        title.text("Top Video Games of " + year);
+      }
+
+      // Remove elements not in use if fewer groups in new dataset
+      bars.exit().remove();
+      counts.exit().remove();
   });
 }
 
