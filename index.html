@@ -7,6 +7,8 @@
         <link rel="stylesheet" href="main.css"/>
         <!--Feel free to add more CSS files as needed-->
         <script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
+        <script type="text/javascript" src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+        <script type="text/javascript" src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
     </head>
 <body>
     <div class="header">
@@ -15,7 +17,17 @@
     <!--  We included a basic HTML structure for the 3 graphs here. Feel free to change this if you'd like  -->
     <div class="row">
         <div class="col-lg-6">
+            <h4>Top Video Games</h4>
+            <button type="button" class="btn btn-info" onclick="setVideoGameBarData(true, 0)">All Time</button>
+            <button type="button" class="btn btn-info" onclick="setVideoGameBarData(false, document.getElementById('year').value)">By Year</button>
+            <input type="text" id="year" placeholder="2010">
             <div id="graph1"></div>
+            <h4>Video Game Genre Popularity By Region (Millions of Units Sold)</h4>
+            <button type="button" class="btn btn-info" onclick="setVideoGamePieData('NA_Sales')">North America</button>
+            <button type="button" class="btn btn-info" onclick="setVideoGamePieData('EU_Sales')">Europe</button>
+            <button type="button" class="btn btn-info" onclick="setVideoGamePieData('JP_Sales')">Japan</button>
+            <button type="button" class="btn btn-info" onclick="setVideoGamePieData('Other_Sales')">Other</button>
+
             <div id="graph2"></div><br/>
         </div>
         <div class="col-lg-6">
